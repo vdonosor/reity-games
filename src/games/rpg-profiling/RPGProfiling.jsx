@@ -73,7 +73,12 @@ export default function RPGProfiling() {
   return (
     <SoundProvider
       // Optional: preload both built-in and custom sounds
-      preload={["notification/completed", "notification/error", "game/void"]}
+      preload={[
+        "notification/completed",
+        "notification/error",
+        "game/void",
+        "game/hit",
+      ]}
       // Optional: set initial sound enabled state (defaults to true)
       initialEnabled={true}
     >

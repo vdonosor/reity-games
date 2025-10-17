@@ -2,6 +2,14 @@ import React, { useEffect, useRef, useState } from "react";
 import LottiePlayer from "./LottiePlayer.jsx";
 import config from "../config/index.jsx";
 import sfx from "../utils/sound.js";
+import { playSound } from "react-sounds";
+
+const playVictory = () => {
+  playSound("notification/completed");
+};
+const playDefeat = () => {
+  playSound("notification/error");
+};
 
 export default function EventOverlay({
   type,
@@ -52,13 +60,22 @@ export default function EventOverlay({
 
   const [animData, setAnimData] = useState(null);
   const [variant, setVariant] = useState(null);
+
   useEffect(() => {
+    if (!type || !visible) return;
     // Overlay open SFX and type-specific cue
     if (!fightResult) {
       if (type === "success") sfx.success();
       else if (type === "fail") sfx.fail();
       else sfx.overlayOpen();
+    } else {
+      if (type === "success") playVictory();
+      else playDefeat();
     }
+  }, [visible, type, fightResult]);
+
+  useEffect(() => {
+    if (!type || !visible) return;
 
     const evs = config.events?.[(type || "success").toLowerCase()];
     if (Array.isArray(evs) && evs.length) {
@@ -69,12 +86,11 @@ export default function EventOverlay({
     }
     const anim = config.animations[(type || "success").toLowerCase()];
     if (anim) setAnimData(anim);
-    return () => sfx.overlayClose();
-  }, [type, detail, fightResult]);
+  }, [visible, type]);
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center p-6 transition-opacity ${
+      className={`touch-none fixed inset-0 z-50 flex items-center justify-center p-6 transition-opacity ${
         visible ? "opacity-100" : "opacity-0"
       }`}
       onMouseMove={move}
