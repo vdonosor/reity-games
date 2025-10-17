@@ -548,5 +548,3 @@ export const SCENARIOS = [
   id: i + 1,
   options: s.options.sort((a, b) => (a.risk || 0) - (b.risk || 0)),
 }));
-
-console.log("SCENARIOS", SCENARIOS);

@@ -2,6 +2,7 @@ import React from "react";
 import AnimatedCard from "./AnimatedCard.jsx";
 import LottiePlayer from "./LottiePlayer.jsx";
 import Warriors from "../../../assets/animations/Warriors.json";
+import sfx from "../utils/sound.js";
 
 export default function StartScreen({ onStart }) {
   return (
@@ -63,14 +64,14 @@ export default function StartScreen({ onStart }) {
 
           <div className="mt-8 flex flex-col sm:flex-row items-center gap-3">
             <button
-              onClick={onStart}
+              onClick={async () => {
+                sfx.start();
+                onStart?.();
+              }}
               className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 font-semibold shadow"
             >
               Comenzar aventura
             </button>
-            <div className="text-xs text-muted-foreground">
-              Optimizado para pantallas táctiles
-            </div>
           </div>
         </div>
       </AnimatedCard>

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import LottiePlayer from "./LottiePlayer.jsx";
 import config from "../config/index.jsx";
 import Battle from "../../../assets/animations/Battle.json";
+import { useSound } from "react-sounds";
 
 export default function CombatOverlay({
   hero,
@@ -22,12 +23,14 @@ export default function CombatOverlay({
     }
     return enemies[enemies.length - 1];
   }, [enemies, hero.attack]);
-  const [phase, setPhase] = useState("intro"); // intro -> clash -> result
   const [animData, setAnimData] = useState(null);
-  const [lastDmgToEnemy, setLastDmgToEnemy] = useState(null);
-  const [lastDmgToHero, setLastDmgToHero] = useState(null);
+
+  const { play: playVictory } = useSound("notification/completed");
+  const { play: playDefeat } = useSound("notification/error");
+  const { play: playVoid } = useSound("game/void");
 
   useEffect(() => {
+    playVoid();
     if (fightAnimation) {
       setAnimData(fightAnimation);
       return;
@@ -39,7 +42,7 @@ export default function CombatOverlay({
       return;
     }
     setAnimData(Battle);
-  }, [fightAnimation]);
+  }, [fightAnimation, playVoid]);
 
   const resolve = () => {
     // Simple single-round: both deal damage, then finish
@@ -48,8 +51,12 @@ export default function CombatOverlay({
     const heroHpAfter = Math.max(0, hero.hp - dmgToHero);
     const enemyHpAfter = Math.max(0, (enemy?.hp ?? 1) - dmgToEnemy);
     const victory = enemy && enemyHpAfter <= 0 && heroHpAfter > 0;
-    setLastDmgToEnemy(dmgToEnemy);
-    setLastDmgToHero(dmgToHero);
+    if (victory) {
+      playVictory();
+    } else {
+      playDefeat();
+    }
+
     onResolve({
       heroHpAfter,
       enemyHpAfter,
@@ -110,43 +117,16 @@ export default function CombatOverlay({
 
           <div className="mt-4 flex items-center justify-between gap-2">
             <div className="text-sm text-left">
-              {phase === "result" ? (
-                <div className="space-y-1">
-                  <div className="font-semibold">Resultado</div>
-                  <div>
-                    Daño a enemigo: {enemy.name} -
-                    {typeof lastDmgToEnemy === "number" ? lastDmgToEnemy : "?"}{" "}
-                    HP
-                  </div>
-                  <div>
-                    Daño al héroe: -
-                    {typeof lastDmgToHero === "number" ? lastDmgToHero : "?"} HP
-                  </div>
-                </div>
-              ) : (
-                <div className="text-muted-foreground">
-                  Pulsa “Atacar” para resolver la ronda
-                </div>
-              )}
+              <div className="text-muted-foreground">
+                Pulsa “Atacar” para resolver la ronda
+              </div>
             </div>
-            {phase !== "result" ? (
-              <button
-                className="inline-flex items-center justify-center rounded-xl bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 font-semibold shadow"
-                onClick={() => {
-                  setPhase("result");
-                  resolve();
-                }}
-              >
-                Atacar
-              </button>
-            ) : (
-              <button
-                className="inline-flex items-center justify-center rounded-xl border border-border bg-background/60 hover:bg-background px-4 py-2 font-medium"
-                onClick={() => onResolve(null)}
-              >
-                Cerrar
-              </button>
-            )}
+            <button
+              className="inline-flex items-center justify-center rounded-xl bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 font-semibold shadow"
+              onClick={resolve}
+            >
+              Atacar
+            </button>
           </div>
         </div>
       </div>

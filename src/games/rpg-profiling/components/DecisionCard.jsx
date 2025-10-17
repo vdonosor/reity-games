@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import AnimatedCard from "./AnimatedCard.jsx";
+import sfx from "../utils/sound.js";
 
 /**
  * Swipeable decision card
@@ -34,12 +35,19 @@ export default function DecisionCard({ scenario, onChoose }) {
   };
   const end = () => {
     setDragging(false);
-    const hasC = optionsLength > 2;
-    const hasD = optionsLength > 3;
-    if (dy < -threshold) onChoose(scenario.options[0]);
-    else if (dy > threshold) onChoose(scenario.options[1]);
-    else if (hasC && dx > threshold) onChoose(scenario.options[2]);
-    else if (hasD && dx < -threshold) onChoose(scenario.options[3]);
+    if (dy < -threshold) {
+      sfx.choice("up");
+      onChoose(scenario.options[0]);
+    } else if (dy > threshold) {
+      sfx.choice("down");
+      onChoose(scenario.options[optionsLength - 1]);
+    } else if (optionsLength > 2 && dx < -threshold) {
+      sfx.choice("left");
+      onChoose(scenario.options[2]);
+    } else if (optionsLength > 3 && dx > threshold) {
+      sfx.choice("right");
+      onChoose(scenario.options[3]);
+    }
     setDx(0);
     setDy(0);
   };
@@ -89,7 +97,11 @@ export default function DecisionCard({ scenario, onChoose }) {
 
           <div className="relative mt-5 grid gap-3 sm:gap-4">
             <button
-              onClick={() => onChoose(scenario.options[0])}
+              onClick={() => {
+                sfx.click();
+                sfx.choice("up");
+                onChoose(scenario.options[0]);
+              }}
               className="inline-flex items-center justify-between rounded-xl bg-primary-600/90 hover:bg-primary-600 text-white px-4 py-3 sm:px-5 sm:py-4 shadow-lg ring-1 ring-black/5 transition-colors"
             >
               <span className="flex items-center gap-2 text-left">
@@ -111,7 +123,11 @@ export default function DecisionCard({ scenario, onChoose }) {
             {optionsLength > 2 && (
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <button
-                  onClick={() => onChoose(scenario.options[1])}
+                  onClick={() => {
+                    sfx.click();
+                    sfx.choice("left");
+                    onChoose(scenario.options[1]);
+                  }}
                   className="inline-flex items-center justify-between rounded-xl bg-secondary-600 hover:bg-secondary-600/90 text-white px-4 py-3 sm:px-5 sm:py-4 shadow-lg ring-1 ring-black/5 transition-colors"
                 >
                   <span className="flex items-center gap-2 text-left">
@@ -131,7 +147,11 @@ export default function DecisionCard({ scenario, onChoose }) {
                 </button>
                 {optionsLength > 3 && (
                   <button
-                    onClick={() => onChoose(scenario.options[2])}
+                    onClick={() => {
+                      sfx.click();
+                      sfx.choice("right");
+                      onChoose(scenario.options[2]);
+                    }}
                     className="inline-flex items-center justify-between rounded-xl bg-rose-500 hover:bg-rose-600 text-white px-4 py-3 sm:px-5 sm:py-4 shadow-lg ring-1 ring-black/5 transition-colors"
                   >
                     <span className="flex items-center gap-2 text-left">
@@ -154,7 +174,11 @@ export default function DecisionCard({ scenario, onChoose }) {
             )}
 
             <button
-              onClick={() => onChoose(scenario.options[optionsLength - 1])}
+              onClick={() => {
+                sfx.click();
+                sfx.choice("down");
+                onChoose(scenario.options[optionsLength - 1]);
+              }}
               className="inline-flex items-center justify-between rounded-xl bg-accent-600/90 hover:bg-accent-600 text-white px-4 py-3 sm:px-5 sm:py-4 shadow-lg ring-1 ring-black/5 transition-colors"
             >
               <span className="flex items-center gap-2 text-left">
@@ -177,28 +201,28 @@ export default function DecisionCard({ scenario, onChoose }) {
             <div className="pointer-events-none">
               <div
                 className="absolute top-4 left-4 rounded-lg bg-primary-600 text-white text-[10px] font-bold px-2 py-1 shadow transition-opacity"
-                style={{ opacity: rightOpacity }}
+                style={{ opacity: upOpacity }}
               >
                 Opción A
               </div>
               <div
                 className="absolute top-4 right-4 rounded-lg bg-accent-600 text-white text-[10px] font-bold px-2 py-1 shadow transition-opacity"
-                style={{ opacity: leftOpacity }}
+                style={{ opacity: downOpacity }}
               >
                 Opción B
               </div>
-              {optionsLength - 1 > 2 && (
+              {optionsLength > 2 && (
                 <div
                   className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-12 rounded-lg bg-secondary-600 text-white text-[10px] font-bold px-2 py-1 shadow transition-opacity"
-                  style={{ opacity: upOpacity }}
+                  style={{ opacity: leftOpacity }}
                 >
                   Opción C
                 </div>
               )}
-              {optionsLength - 1 > 3 && (
+              {optionsLength > 3 && (
                 <div
                   className="absolute top-1/2 left-1/2 -translate-x-1/2 translate-y-12 rounded-lg bg-rose-600 text-white text-[10px] font-bold px-2 py-1 shadow transition-opacity"
-                  style={{ opacity: downOpacity }}
+                  style={{ opacity: rightOpacity }}
                 >
                   Opción D
                 </div>

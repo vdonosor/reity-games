@@ -1,8 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
 import LottiePlayer from "./LottiePlayer.jsx";
 import config from "../config/index.jsx";
+import sfx from "../utils/sound.js";
 
-export default function EventOverlay({ type, onDone, detail, effects = [] }) {
+export default function EventOverlay({
+  type,
+  onDone,
+  detail,
+  effects = [],
+  fightResult = false,
+}) {
   const [visible, setVisible] = useState(true);
   const [dy, setDy] = useState(0);
   const startY = useRef(null);
@@ -36,11 +43,6 @@ export default function EventOverlay({ type, onDone, detail, effects = [] }) {
       title: "Ups…",
       desc: detail || "El riesgo te pasó la cuenta.",
     },
-    fight_result: {
-      emoji: "🏆",
-      title: "Victoria",
-      desc: detail || "Has derrotado al enemigo.",
-    },
     fight: {
       emoji: "⚔️",
       title: "Combate",
@@ -51,6 +53,13 @@ export default function EventOverlay({ type, onDone, detail, effects = [] }) {
   const [animData, setAnimData] = useState(null);
   const [variant, setVariant] = useState(null);
   useEffect(() => {
+    // Overlay open SFX and type-specific cue
+    if (!fightResult) {
+      if (type === "success") sfx.success();
+      else if (type === "fail") sfx.fail();
+      else sfx.overlayOpen();
+    }
+
     const evs = config.events?.[(type || "success").toLowerCase()];
     if (Array.isArray(evs) && evs.length) {
       const picked = evs[Math.floor(Math.random() * evs.length)];
@@ -60,7 +69,8 @@ export default function EventOverlay({ type, onDone, detail, effects = [] }) {
     }
     const anim = config.animations[(type || "success").toLowerCase()];
     if (anim) setAnimData(anim);
-  }, [type]);
+    return () => sfx.overlayClose();
+  }, [type, detail, fightResult]);
 
   return (
     <div

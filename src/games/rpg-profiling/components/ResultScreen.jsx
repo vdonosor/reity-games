@@ -41,7 +41,6 @@ function getProfile(pct) {
 export default function ResultScreen({ score, steps, onRestart, hero }) {
   const pct = Math.round((score / steps / 3) * 100);
   const profile = getProfile(pct);
-  console.log("Acaa", { score, steps, pct, profile });
 
   return (
     <div className="min-h-dvh pt-16 pb-10 flex items-center justify-center p-4">

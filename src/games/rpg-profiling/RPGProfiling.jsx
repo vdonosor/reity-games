@@ -10,6 +10,7 @@ import { resolveChoice } from "./core/engine.js";
 import { createHero } from "./core/hero.jsx";
 import config from "./config/index.jsx";
 import Battle from "../../assets/animations/Battle.json";
+import { SoundProvider } from "react-sounds";
 
 const enemies = config.enemies;
 
@@ -70,68 +71,48 @@ export default function RPGProfiling() {
   };
 
   return (
-    <div className="min-h-dvh bg-gradient-to-b from-background via-background to-background relative">
-      {started && !gameOver && <HUD step={playedCount} total={maxSteps} />}
+    <SoundProvider
+      // Optional: preload both built-in and custom sounds
+      preload={["notification/completed", "notification/error", "game/void"]}
+      // Optional: set initial sound enabled state (defaults to true)
+      initialEnabled={true}
+    >
+      <div className="min-h-dvh bg-gradient-to-b from-background via-background to-background relative">
+        {started && !gameOver && <HUD step={playedCount} total={maxSteps} />}
 
-      {!started && <StartScreen onStart={startGame} />}
+        {!started && <StartScreen onStart={startGame} />}
 
-      {started && !gameOver && current && (
-        <div className="min-h-dvh pt-16 pb-10 flex items-center justify-center p-4">
-          <div className="absolute inset-0 -z-10 bg-[radial-gradient(700px_circle_at_20%_20%,theme(colors.primary.500/12),transparent_40%),radial-gradient(700px_circle_at_80%_10%,theme(colors.accent.500/12),transparent_40%),radial-gradient(800px_circle_at_50%_90%,theme(colors.rose.500/10),transparent_40%)]" />
-          <div className="w-full max-w-2xl">
-            <HeroPanel hero={hero} />
-            <DecisionCard scenario={current} onChoose={handleChoose} />
-            <div className="mt-4 text-center text-xs text-muted-foreground">
-              Arrastra la tarjeta o toca un botón para decidir
+        {started && !gameOver && current && (
+          <div className="min-h-dvh pt-16 pb-10 flex items-center justify-center p-4">
+            <div className="absolute inset-0 -z-10 bg-[radial-gradient(700px_circle_at_20%_20%,theme(colors.primary.500/12),transparent_40%),radial-gradient(700px_circle_at_80%_10%,theme(colors.accent.500/12),transparent_40%),radial-gradient(800px_circle_at_50%_90%,theme(colors.rose.500/10),transparent_40%)]" />
+            <div className="w-full max-w-2xl">
+              <HeroPanel hero={hero} />
+              <DecisionCard scenario={current} onChoose={handleChoose} />
+              <div className="mt-4 text-center text-xs text-muted-foreground">
+                Arrastra la tarjeta o toca un botón para decidir
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {gameOver && (
-        <ResultScreen
-          score={riskScore}
-          steps={playedCount}
-          onRestart={restart}
-          hero={hero}
-        />
-      )}
+        {gameOver && (
+          <ResultScreen
+            score={riskScore}
+            steps={playedCount}
+            onRestart={restart}
+            hero={hero}
+          />
+        )}
 
-      {overlay && overlay.type !== "fight" && (
-        <EventOverlay
-          type={overlay.type}
-          detail={overlay.detail}
-          effects={overlay.effects}
-          onDone={() => {
-            setOverlay(null);
-            // Avanza o finaliza: muerte, máximo de pasos o sin escenarios restantes
-            const isDead = hero.hp <= 0;
-            const nextCount = playedCount + 1;
-            const reachedMax = nextCount >= maxSteps;
-            if (isDead || reachedMax || remaining.length === 0) {
-              setPlayedCount(nextCount);
-              setCurrent(null);
-              setGameOver(true);
-              return;
-            }
-            // Siguiente escenario del queue
-            const [next, ...rest] = remaining;
-            setPlayedCount(nextCount);
-            setCurrent(next ?? null);
-            setRemaining(rest);
-          }}
-        />
-      )}
-
-      {overlay && overlay.type === "fight" && enemies.length > 0 && (
-        <CombatOverlay
-          hero={hero}
-          enemies={enemies}
-          fightAnimation={Battle}
-          onResolve={(res) => {
-            if (!res) {
+        {overlay && overlay.type !== "fight" && (
+          <EventOverlay
+            type={overlay.type}
+            detail={overlay.detail}
+            fightResult={overlay.fightResult}
+            effects={overlay.effects}
+            onDone={() => {
               setOverlay(null);
-              // Si se cancela la pelea, seguimos el mismo flujo que un evento finalizado
+              // Avanza o finaliza: muerte, máximo de pasos o sin escenarios restantes
               const isDead = hero.hp <= 0;
               const nextCount = playedCount + 1;
               const reachedMax = nextCount >= maxSteps;
@@ -139,65 +120,94 @@ export default function RPGProfiling() {
                 setPlayedCount(nextCount);
                 setCurrent(null);
                 setGameOver(true);
-              } else {
-                const [next, ...rest] = remaining;
-                setPlayedCount(nextCount);
-                setCurrent(next ?? null);
-                setRemaining(rest);
+                return;
               }
-              return;
-            }
+              // Siguiente escenario del queue
+              const [next, ...rest] = remaining;
+              setPlayedCount(nextCount);
+              setCurrent(next ?? null);
+              setRemaining(rest);
+            }}
+          />
+        )}
 
-            const damage = res.heroHpAfter - hero.hp;
-            const coins = 2 + (lastRisk ?? 0);
-            const attackUp = res.victory ? 1 : 0;
-            if (res.victory) {
-              // Give rewards
-              setHero((prev) => ({
-                ...prev,
-                hp: res.heroHpAfter,
-                coins: prev.coins + coins,
-                attack: prev.attack + attackUp,
-              }));
-            } else {
-              setHero((prev) => ({ ...prev, hp: res.heroHpAfter }));
-            }
-            // Show a result overlay with explicit fight outcome
-            const msg = res.victory
-              ? "¡Victoria! Dominas el mercado en esta ronda."
-              : `Derrota… ${res.enemy.name} te ha superado.`;
-            setOverlay({
-              type: res.victory ? "success" : "fail",
-              detail: msg,
-              effects: [
-                ...(damage !== 0
-                  ? [
-                      {
-                        type: "hp",
-                        delta: damage,
-                        label: `${damage} HP`,
-                      },
-                    ]
-                  : []),
-                ...(res.victory
-                  ? [
-                      {
-                        type: "coins",
-                        delta: coins,
-                        label: `+${coins} monedas`,
-                      },
-                      {
-                        type: "attack",
-                        delta: attackUp,
-                        label: `+${attackUp} Ataque`,
-                      },
-                    ]
-                  : []),
-              ],
-            });
-          }}
-        />
-      )}
-    </div>
+        {overlay && overlay.type === "fight" && enemies.length > 0 && (
+          <CombatOverlay
+            hero={hero}
+            enemies={enemies}
+            fightAnimation={Battle}
+            onResolve={(res) => {
+              if (!res) {
+                setOverlay(null);
+                // Si se cancela la pelea, seguimos el mismo flujo que un evento finalizado
+                const isDead = hero.hp <= 0;
+                const nextCount = playedCount + 1;
+                const reachedMax = nextCount >= maxSteps;
+                if (isDead || reachedMax || remaining.length === 0) {
+                  setPlayedCount(nextCount);
+                  setCurrent(null);
+                  setGameOver(true);
+                } else {
+                  const [next, ...rest] = remaining;
+                  setPlayedCount(nextCount);
+                  setCurrent(next ?? null);
+                  setRemaining(rest);
+                }
+                return;
+              }
+
+              const damage = res.heroHpAfter - hero.hp;
+              const coins = 2 + (lastRisk ?? 0);
+              const attackUp = res.victory ? 1 : 0;
+              if (res.victory) {
+                // Give rewards
+                setHero((prev) => ({
+                  ...prev,
+                  hp: res.heroHpAfter,
+                  coins: prev.coins + coins,
+                  attack: prev.attack + attackUp,
+                }));
+              } else {
+                setHero((prev) => ({ ...prev, hp: res.heroHpAfter }));
+              }
+              // Show a result overlay with explicit fight outcome
+              const msg = res.victory
+                ? `¡Victoria! Has derrotado a ${res.enemy.name}.`
+                : `Derrota… ${res.enemy.name} te ha superado.`;
+              setOverlay({
+                type: res.victory ? "success" : "fail",
+                detail: msg,
+                fightResult: true,
+                effects: [
+                  ...(damage !== 0
+                    ? [
+                        {
+                          type: "hp",
+                          delta: damage,
+                          label: `${damage} HP`,
+                        },
+                      ]
+                    : []),
+                  ...(res.victory
+                    ? [
+                        {
+                          type: "coins",
+                          delta: coins,
+                          label: `+${coins} monedas`,
+                        },
+                        {
+                          type: "attack",
+                          delta: attackUp,
+                          label: `+${attackUp} Ataque`,
+                        },
+                      ]
+                    : []),
+                ],
+              });
+            }}
+          />
+        )}
+      </div>
+    </SoundProvider>
   );
 }
