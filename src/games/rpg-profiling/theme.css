@@ -1,0 +1,130 @@
+/*
+  Color tokens via CSS Variables
+  - Tailwind classes map to these variables in tailwind.config.js
+  - Use utilities like bg-background, text-foreground, bg-primary-500, etc.
+*/
+
+:root {
+  /* Semantic surface tokens (OKLCH components) */
+  --background: 99% 0 0;        /* page background */
+  --foreground: 22% 0.02 264;   /* default text */
+  --card: 100% 0 0;             /* card surfaces */
+  --card-foreground: 22% 0.02 264;
+  --muted: 96% 0.01 264;        /* subtle backgrounds */
+  --muted-foreground: 42% 0.02 264;
+  --border: 89% 0.01 264;
+  --input: 89% 0.01 264;
+
+  /* Primary — Indigo-esque (scales) */
+  --primary-50:  97% 0.02 264;
+  --primary-100: 94% 0.03 264;
+  --primary-200: 89% 0.06 264;
+  --primary-300: 83% 0.10 264;
+  --primary-400: 74% 0.14 264;
+  --primary-500: 66% 0.18 264;
+  --primary-600: 58% 0.17 264;
+  --primary-700: 51% 0.15 264;
+  --primary-800: 44% 0.12 264;
+  --primary-900: 37% 0.10 264;
+
+  /* Secondary — Teal */
+  --secondary-50:  97% 0.02 180;
+  --secondary-100: 94% 0.03 180;
+  --secondary-200: 90% 0.05 180;
+  --secondary-300: 85% 0.08 180;
+  --secondary-400: 78% 0.11 180;
+  --secondary-500: 70% 0.14 180;
+  --secondary-600: 62% 0.13 180;
+  --secondary-700: 54% 0.11 180;
+  --secondary-800: 46% 0.09 180;
+  --secondary-900: 39% 0.07 180;
+
+  /* Accent — Amber */
+  --accent-50:  98% 0.02 85;
+  --accent-100: 96% 0.03 85;
+  --accent-200: 92% 0.06 85;
+  --accent-300: 88% 0.10 85;
+  --accent-400: 84% 0.13 85;
+  --accent-500: 80% 0.14 85;
+  --accent-600: 74% 0.13 85;
+  --accent-700: 67% 0.11 85;
+  --accent-800: 60% 0.09 85;
+  --accent-900: 53% 0.08 85;
+}
+
+/* Tailwind v4 theme tokens mapped to our CSS variables */
+@theme {
+  /* Semantic tokens */
+  --color-background: oklch(var(--background));
+  --color-foreground: oklch(var(--foreground));
+  --color-card: oklch(var(--card));
+  --color-card-foreground: oklch(var(--card-foreground));
+  --color-muted: oklch(var(--muted));
+  --color-muted-foreground: oklch(var(--muted-foreground));
+  --color-border: oklch(var(--border));
+  --color-input: oklch(var(--input));
+
+  /* Primary scale */
+  --color-primary-50: oklch(var(--primary-50));
+  --color-primary-100: oklch(var(--primary-100));
+  --color-primary-200: oklch(var(--primary-200));
+  --color-primary-300: oklch(var(--primary-300));
+  --color-primary-400: oklch(var(--primary-400));
+  --color-primary-500: oklch(var(--primary-500));
+  --color-primary-600: oklch(var(--primary-600));
+  --color-primary-700: oklch(var(--primary-700));
+  --color-primary-800: oklch(var(--primary-800));
+  --color-primary-900: oklch(var(--primary-900));
+
+  /* Secondary scale */
+  --color-secondary-50: oklch(var(--secondary-50));
+  --color-secondary-100: oklch(var(--secondary-100));
+  --color-secondary-200: oklch(var(--secondary-200));
+  --color-secondary-300: oklch(var(--secondary-300));
+  --color-secondary-400: oklch(var(--secondary-400));
+  --color-secondary-500: oklch(var(--secondary-500));
+  --color-secondary-600: oklch(var(--secondary-600));
+  --color-secondary-700: oklch(var(--secondary-700));
+  --color-secondary-800: oklch(var(--secondary-800));
+  --color-secondary-900: oklch(var(--secondary-900));
+
+  /* Accent scale */
+  --color-accent-50: oklch(var(--accent-50));
+  --color-accent-100: oklch(var(--accent-100));
+  --color-accent-200: oklch(var(--accent-200));
+  --color-accent-300: oklch(var(--accent-300));
+  --color-accent-400: oklch(var(--accent-400));
+  --color-accent-500: oklch(var(--accent-500));
+  --color-accent-600: oklch(var(--accent-600));
+  --color-accent-700: oklch(var(--accent-700));
+  --color-accent-800: oklch(var(--accent-800));
+  --color-accent-900: oklch(var(--accent-900));
+}
+
+/* Dark mode palette overrides (system preference) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: 15% 0.01 264;
+    --foreground: 97% 0 0;
+    --card: 19% 0.01 264;
+    --card-foreground: 97% 0 0;
+    --muted: 24% 0.01 264;
+    --muted-foreground: 80% 0.02 264;
+    --border: 28% 0.01 264;
+    --input: 28% 0.01 264;
+  }
+}
+
+/* Base element font family fallback */
+body {
+  font-family: "Nunito Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol";
+}
+
+/* Fallback utility classes for token-based colors */
+.text-muted-foreground {
+  color: oklch(var(--muted-foreground));
+}
+
+@import 'tailwindcss';
