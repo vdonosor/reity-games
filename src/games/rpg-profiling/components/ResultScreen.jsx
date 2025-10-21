@@ -77,6 +77,7 @@ export default function ResultScreen({
 
   const handleKeyPress = useCallback(
     (val) => {
+      setSubmitted(false);
       if (val === "BACKSPACE") {
         setEmail((e) => e.slice(0, -1));
       } else if (val === "CLEAR") {
@@ -93,8 +94,34 @@ export default function ResultScreen({
   const handleSubmit = useCallback(() => {
     if (!isValid) return;
     setSubmitted(true);
-    if (typeof onSubmitEmail === "function") onSubmitEmail({ email, prize });
-  }, [email, isValid, onSubmitEmail, prize]);
+    // Always persist locally in a JSON list on localStorage
+    try {
+      const KEY = "reity_rpg_emails";
+      const raw = window?.localStorage?.getItem(KEY);
+      let list = [];
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) list = parsed;
+        } catch {
+          // If corrupt, reset to empty array
+          list = [];
+          // Save raw in localStorage with uuid key for debugging
+          const debugKey = `reity_rpg_emails_corrupt_${Date.now()}`;
+          window?.localStorage?.setItem(debugKey, raw);
+        }
+      }
+      // Append the email; requirement says only add to the JSON list
+      list.push({ email, profile: profile.label, pct });
+      window?.localStorage?.setItem(KEY, JSON.stringify(list));
+    } catch (e) {
+      // Non-blocking: if storage fails, we still update UI state
+      console.error("No se pudo guardar el email en localStorage", e);
+    }
+
+    if (typeof onSubmitEmail === "function")
+      onSubmitEmail({ email, profile: profile.label, pct });
+  }, [email, isValid, onSubmitEmail, pct, profile.label]);
 
   return (
     <div className="min-h-dvh pt-16 pb-10 flex items-center justify-center p-4">
