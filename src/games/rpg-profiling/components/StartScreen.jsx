@@ -1,10 +1,60 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import AnimatedCard from "./AnimatedCard.jsx";
 import LottiePlayer from "./LottiePlayer.jsx";
 import Warriors from "../../../assets/animations/Warriors.json";
 import sfx from "../utils/sound.js";
+import { useSimplified } from "../context/SimplifiedContext.jsx";
 
 export default function StartScreen({ onStart }) {
+  const { simplified, toggleSimplified } = useSimplified();
+  const [toast, setToast] = useState("");
+  const tapCountRef = useRef(0);
+  const lastTapRef = useRef(0);
+
+  // Hidden gesture: 5 taps within 2.5s on the title area toggles mode
+  const onSecretTap = () => {
+    const now = Date.now();
+    if (now - lastTapRef.current > 2500) {
+      tapCountRef.current = 0;
+    }
+    tapCountRef.current += 1;
+    lastTapRef.current = now;
+    if (tapCountRef.current >= 5) {
+      tapCountRef.current = 0;
+      toggleSimplified();
+      sfx.click();
+      setToast(`Modo ${!simplified ? "Simplificado" : "Avanzado"} activado`);
+      // auto-hide toast
+      setTimeout(() => setToast(""), 1800);
+    }
+  };
+
+  // Keyboard fallback for devs: press Shift+S 3 times within 2s
+  useEffect(() => {
+    let count = 0;
+    let timer;
+    const onKey = (e) => {
+      if (e.key?.toLowerCase() === "s" && (e.shiftKey || e.metaKey)) {
+        count += 1;
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          count = 0;
+        }, 2000);
+        if (count >= 3) {
+          count = 0;
+          toggleSimplified();
+          sfx.click();
+          setToast(
+            `Modo ${!simplified ? "Simplificado" : "Avanzado"} activado`
+          );
+          setTimeout(() => setToast(""), 1800);
+        }
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [toggleSimplified, simplified]);
+
   return (
     <div className="min-h-dvh pt-16 pb-10 flex items-center justify-center p-4">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(1200px_circle_at_20%_10%,theme(colors.primary.500/12),transparent_40%),radial-gradient(800px_circle_at_80%_10%,theme(colors.accent.500/12),transparent_40%),radial-gradient(1000px_circle_at_50%_80%,theme(colors.rose.500/10),transparent_40%)]" />
@@ -24,9 +74,14 @@ export default function StartScreen({ onStart }) {
             <div className="h-12 w-12 rounded-xl bg-primary-600 text-white flex items-center justify-center text-2xl shadow-lg">
               🏰
             </div>
-            <div>
+            <div onClick={onSecretTap} className="select-none">
               <p className="text-xs text-muted-foreground">Reity</p>
-              <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight">
+              <h1
+                className={`text-2xl sm:text-3xl font-extrabold leading-tight transition-colors ${
+                  !simplified ? "text-primary-600" : ""
+                }`}
+                title=""
+              >
                 Aventura Inmobiliaria
               </h1>
             </div>
@@ -75,6 +130,17 @@ export default function StartScreen({ onStart }) {
           </div>
         </div>
       </AnimatedCard>
+
+      {/* Subtle toast for mode changes; not visible unless toggled */}
+      {toast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 inset-x-0 mx-auto w-max max-w-[90vw] rounded-xl bg-black/80 text-white px-4 py-2 text-xs sm:text-sm shadow-lg backdrop-blur"
+        >
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

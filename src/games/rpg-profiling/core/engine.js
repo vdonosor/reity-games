@@ -2,9 +2,9 @@ import { randomItemForRisk, heroHasItem } from "./items.js";
 import { giveItem } from "./hero.jsx";
 import config from "../config/index.jsx";
 
-export function rollOutcome(risk, rng = Math.random) {
+export function rollOutcome(risk, simplified, rng = Math.random) {
   const failProb = config.probabilities.fail[risk] ?? 0.35;
-  const fightProb = config.simplified
+  const fightProb = simplified
     ? 0
     : config.probabilities.fightBase + risk * 0.1; // TEMPORAL: enable fights
   const roll = rng();
@@ -13,8 +13,8 @@ export function rollOutcome(risk, rng = Math.random) {
   return "success";
 }
 
-export function resolveChoice({ hero, option }) {
-  const outcome = rollOutcome(option.risk);
+export function resolveChoice({ hero, option, simplified }) {
+  const outcome = rollOutcome(option.risk, simplified);
   let nextHero = { ...hero };
   let detail = "";
   const effects = []; // { type: 'hp'|'coins'|'attack'|'defense'|'item', delta, label }
@@ -29,7 +29,7 @@ export function resolveChoice({ hero, option }) {
       randomItemForRisk(option.risk, { excludeKeys: exclude }) ||
       config.items.LLAVE_BUEN_BARRIO;
 
-    if (config.simplified) {
+    if (simplified) {
       item = null; // TEMPORAL: disable items for now
     } else {
       if (!heroHasItem(nextHero, item.key)) {
@@ -76,7 +76,7 @@ export function resolveChoice({ hero, option }) {
       detail = `Obtienes ${item.name}. ${item.desc}`;
     }
   } else if (outcome === "fail") {
-    if (!config.simplified) {
+    if (!simplified) {
       // TEMPORAL: simplified fail outcome without fights
       const dmg = 1 + option.risk;
       const realDmg = Math.max(1, dmg - nextHero.defense);

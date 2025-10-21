@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useCallback } from "react";
 import AnimatedCard from "./AnimatedCard.jsx";
 import VirtualKeyboard from "./VirtualKeyboard.jsx";
-import config from "../config/index.jsx";
+import { useSimplified } from "../context/SimplifiedContext.jsx";
 
 function getProfile(pct) {
   if (pct <= 20)
@@ -54,6 +54,7 @@ export default function ResultScreen({
   prizeTiers = DEFAULT_PRIZES,
   onSubmitEmail,
 }) {
+  const { simplified } = useSimplified();
   const pct = Math.round((score / steps / 3) * 100);
   const profile = getProfile(pct);
 
@@ -158,7 +159,7 @@ export default function ResultScreen({
           </div>
 
           {/* TEMPORAL: Simplify HUD */}
-          {!config.simplified && hero && (
+          {!simplified && hero && (
             <div className="mt-6 rounded-xl border border-border bg-background/60 p-4">
               <p className="text-sm text-muted-foreground">Tu aventura</p>
               <div className="mt-3 flex items-center gap-3">

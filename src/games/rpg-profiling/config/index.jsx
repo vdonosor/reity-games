@@ -9,7 +9,6 @@ import items from "./items.jsx";
 import { SCENARIOS } from "./scenarios.js";
 
 export default {
-  simplified: true,
   max_steps: 8,
   probabilities: {
     fail: [0.1, 0.25, 0.5, 0.75],

@@ -12,10 +12,14 @@ import config from "./config/index.jsx";
 import Battle from "../../assets/animations/Battle.json";
 import { SoundProvider } from "react-sounds";
 import { useNavigate } from "react-router-dom";
+import {
+  SimplifiedProvider,
+  useSimplified,
+} from "./context/SimplifiedContext.jsx";
 
 const enemies = config.enemies;
 
-export default function RPGProfiling() {
+function GameInner() {
   const allScenarios = useMemo(() => config.scenarios, []);
   const [started, setStarted] = useState(false);
   const [riskScore, setRiskScore] = useState(0);
@@ -26,6 +30,7 @@ export default function RPGProfiling() {
   const [playedCount, setPlayedCount] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [lastRisk, setLastRisk] = useState(0); // risk of last chosen option (for fight rewards)
+  const { simplified } = useSimplified();
 
   const navigate = useNavigate();
 
@@ -39,11 +44,12 @@ export default function RPGProfiling() {
     const { nextHero, outcome, detail, effects } = resolveChoice({
       hero,
       option: opt,
+      simplified,
     });
     setHero(nextHero);
     setRiskScore((r) => r + (opt.risk ?? 0));
     setLastRisk(opt.risk ?? 0);
-    if (!config.simplified) {
+    if (!simplified) {
       setOverlay({ type: outcome, detail, effects }); // TEMPORAL: disable effects display
     } else {
       const nextCount = playedCount + 1;
@@ -234,5 +240,14 @@ export default function RPGProfiling() {
         )}
       </div>
     </SoundProvider>
+  );
+}
+
+export default function RPGProfiling() {
+  // Default simplified true; provider reads persisted value if any
+  return (
+    <SimplifiedProvider defaultValue={true}>
+      <GameInner />
+    </SimplifiedProvider>
   );
 }

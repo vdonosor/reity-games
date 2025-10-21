@@ -1,7 +1,8 @@
 import React from "react";
-import config from "../config/index.jsx";
+import { useSimplified } from "../context/SimplifiedContext.jsx";
 
 export default function HeroPanel({ hero }) {
+  const { simplified } = useSimplified();
   const hpPct = Math.max(
     0,
     Math.min(100, Math.round((hero.hp / hero.maxHp) * 100))
@@ -25,7 +26,7 @@ export default function HeroPanel({ hero }) {
                   {hero.coins}
                 </span>
                 {/* TEMPORAL: Simplify HUD */}
-                {!config.simplified && (
+                {!simplified && (
                   <>
                     <span
                       title="Ataque"
@@ -54,7 +55,7 @@ export default function HeroPanel({ hero }) {
           </div>
         </div>
         {/* TEMPORAL: Simplify HUD */}
-        {!config.simplified && hero.items.length > 0 && (
+        {!simplified && hero.items.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2 text-sm">
             {hero.items.map((item, idx) => (
               <span
