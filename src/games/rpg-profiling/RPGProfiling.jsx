@@ -11,6 +11,7 @@ import { createHero } from "./core/hero.jsx";
 import config from "./config/index.jsx";
 import Battle from "../../assets/animations/Battle.json";
 import { SoundProvider } from "react-sounds";
+import { useNavigate } from "react-router-dom";
 
 const enemies = config.enemies;
 
@@ -25,6 +26,8 @@ export default function RPGProfiling() {
   const [playedCount, setPlayedCount] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [lastRisk, setLastRisk] = useState(0); // risk of last chosen option (for fight rewards)
+
+  const navigate = useNavigate();
 
   const maxSteps = config.max_steps ?? allScenarios.length;
 
@@ -67,7 +70,8 @@ export default function RPGProfiling() {
   };
 
   const restart = () => {
-    startGame();
+    // Force refresh
+    navigate(0);
   };
 
   return (
