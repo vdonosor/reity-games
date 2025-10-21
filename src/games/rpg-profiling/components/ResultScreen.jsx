@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useCallback } from "react";
 import AnimatedCard from "./AnimatedCard.jsx";
 import VirtualKeyboard from "./VirtualKeyboard.jsx";
+import config from "../config/index.jsx";
 
 function getProfile(pct) {
   if (pct <= 20)
@@ -157,7 +158,7 @@ export default function ResultScreen({
           </div>
 
           {/* TEMPORAL: Simplify HUD */}
-          {/* {hero && (
+          {!config.simplified && hero && (
             <div className="mt-6 rounded-xl border border-border bg-background/60 p-4">
               <p className="text-sm text-muted-foreground">Tu aventura</p>
               <div className="mt-3 flex items-center gap-3">
@@ -187,7 +188,7 @@ export default function ResultScreen({
                 </div>
               )}
             </div>
-          )} */}
+          )}
 
           <div className="mt-6 grid sm:grid-cols-1 gap-4">
             {/* <div className="rounded-xl border border-border bg-background/50 p-4">

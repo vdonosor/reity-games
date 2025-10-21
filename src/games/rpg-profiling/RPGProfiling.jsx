@@ -36,27 +36,30 @@ export default function RPGProfiling() {
     if (!s) return;
 
     if (!opt) return;
-    const { nextHero } = resolveChoice({
+    const { nextHero, outcome, detail, effects } = resolveChoice({
       hero,
       option: opt,
     });
     setHero(nextHero);
     setRiskScore((r) => r + (opt.risk ?? 0));
     setLastRisk(opt.risk ?? 0);
-    // setOverlay({ type: outcome, detail, effects }); // TEMPORAL: disable effects display
-    const nextCount = playedCount + 1;
-    const reachedMax = nextCount >= maxSteps;
-    if (reachedMax || remaining.length === 0) {
+    if (!config.simplified) {
+      setOverlay({ type: outcome, detail, effects }); // TEMPORAL: disable effects display
+    } else {
+      const nextCount = playedCount + 1;
+      const reachedMax = nextCount >= maxSteps;
+      if (reachedMax || remaining.length === 0) {
+        setPlayedCount(nextCount);
+        setCurrent(null);
+        setGameOver(true);
+        return;
+      }
+      // Siguiente escenario del queue
+      const [next, ...rest] = remaining;
       setPlayedCount(nextCount);
-      setCurrent(null);
-      setGameOver(true);
-      return;
+      setCurrent(next ?? null);
+      setRemaining(rest);
     }
-    // Siguiente escenario del queue
-    const [next, ...rest] = remaining;
-    setPlayedCount(nextCount);
-    setCurrent(next ?? null);
-    setRemaining(rest);
   };
 
   function shuffle(arr) {

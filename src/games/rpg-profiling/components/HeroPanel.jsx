@@ -1,4 +1,5 @@
 import React from "react";
+import config from "../config/index.jsx";
 
 export default function HeroPanel({ hero }) {
   const hpPct = Math.max(
@@ -24,17 +25,24 @@ export default function HeroPanel({ hero }) {
                   {hero.coins}
                 </span>
                 {/* TEMPORAL: Simplify HUD */}
-                {/* <span title="Ataque" className="inline-flex items-center gap-1">
-                  <span>⚔️</span>
-                  {hero.attack}
-                </span>
-                <span
-                  title="Defensa"
-                  className="inline-flex items-center gap-1"
-                >
-                  <span>🛡️</span>
-                  {hero.defense}
-                </span> */}
+                {!config.simplified && (
+                  <>
+                    <span
+                      title="Ataque"
+                      className="inline-flex items-center gap-1"
+                    >
+                      <span>⚔️</span>
+                      {hero.attack}
+                    </span>
+                    <span
+                      title="Defensa"
+                      className="inline-flex items-center gap-1"
+                    >
+                      <span>🛡️</span>
+                      {hero.defense}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
             <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
@@ -46,7 +54,7 @@ export default function HeroPanel({ hero }) {
           </div>
         </div>
         {/* TEMPORAL: Simplify HUD */}
-        {/* {hero.items.length > 0 && (
+        {!config.simplified && hero.items.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2 text-sm">
             {hero.items.map((item, idx) => (
               <span
@@ -64,7 +72,7 @@ export default function HeroPanel({ hero }) {
               </span>
             ))}
           </div>
-        )} */}
+        )}
       </div>
     </div>
   );
