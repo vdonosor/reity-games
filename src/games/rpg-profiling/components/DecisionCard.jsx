@@ -214,6 +214,15 @@ export default function DecisionCard({ scenario, onChoose }) {
             {scenario.description}
           </p>
 
+          {/* Gentle UX hint */}
+          <p
+            className="mt-6 text-xs sm:text-base text-white flex items-center gap-2"
+            aria-live="polite"
+          >
+            <span aria-hidden="true">💡</span>
+            <span>¿Qué harías? Arrastra la tarjeta o toca una opción.</span>
+          </p>
+
           <div className="relative mt-5 grid gap-3 sm:gap-4">
             <button
               onClick={() => {
