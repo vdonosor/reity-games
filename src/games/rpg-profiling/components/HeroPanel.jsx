@@ -23,7 +23,8 @@ export default function HeroPanel({ hero }) {
                   <span>🪙</span>
                   {hero.coins}
                 </span>
-                <span title="Ataque" className="inline-flex items-center gap-1">
+                {/* TEMPORAL: Simplify HUD */}
+                {/* <span title="Ataque" className="inline-flex items-center gap-1">
                   <span>⚔️</span>
                   {hero.attack}
                 </span>
@@ -33,7 +34,7 @@ export default function HeroPanel({ hero }) {
                 >
                   <span>🛡️</span>
                   {hero.defense}
-                </span>
+                </span> */}
               </div>
             </div>
             <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
@@ -44,7 +45,8 @@ export default function HeroPanel({ hero }) {
             </div>
           </div>
         </div>
-        {hero.items.length > 0 && (
+        {/* TEMPORAL: Simplify HUD */}
+        {/* {hero.items.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2 text-sm">
             {hero.items.map((item, idx) => (
               <span
@@ -62,7 +64,7 @@ export default function HeroPanel({ hero }) {
               </span>
             ))}
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

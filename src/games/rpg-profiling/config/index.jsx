@@ -9,7 +9,7 @@ import items from "./items.jsx";
 import { SCENARIOS } from "./scenarios.js";
 
 export default {
-  max_steps: 10,
+  max_steps: 8,
   probabilities: {
     fail: [0.1, 0.25, 0.5, 0.75],
     fightBase: 0.15, // added with risk*0.1

@@ -3,8 +3,9 @@ import { giveItem } from "./hero.jsx";
 import config from "../config/index.jsx";
 
 export function rollOutcome(risk, rng = Math.random) {
-  const failProb = config.probabilities.fail[risk] ?? 0.35;
-  const fightProb = config.probabilities.fightBase + risk * 0.1;
+  const failProb = config.probabilities.fail[risk] ?? 0.35; // TEMPORAL: tweak probabilities
+  const fightProb = 0;
+  // const fightProb = config.probabilities.fightBase + risk * 0.1; // TEMPORAL: enable fights
   const roll = rng();
   if (roll < failProb) return "fail";
   if (roll < failProb + fightProb) return "fight";
@@ -31,6 +32,7 @@ export function resolveChoice({ hero, option }) {
     } else {
       item = null; // no item awarded if already owned and no alternatives
     }
+    item = null; // TEMPORAL: disable items for now
     // Apply item effect for immediate stat change visualization
     const before = {
       a: nextHero.attack,
@@ -68,10 +70,11 @@ export function resolveChoice({ hero, option }) {
       detail = `Obtienes ${item.name}. ${item.desc}`;
     }
   } else if (outcome === "fail") {
-    const dmg = 1 + option.risk;
-    const realDmg = Math.max(1, dmg - nextHero.defense);
-    nextHero.hp = Math.max(0, nextHero.hp - realDmg);
-    effects.push({ type: "hp", delta: -realDmg, label: `-${realDmg} HP` });
+    // TEMPORAL: simplified fail outcome without fights
+    // const dmg = 1 + option.risk;
+    // const realDmg = Math.max(1, dmg - nextHero.defense);
+    // nextHero.hp = Math.max(0, nextHero.hp - realDmg);
+    // effects.push({ type: "hp", delta: -realDmg, label: `-${realDmg} HP` });
   }
 
   return { outcome, nextHero, detail, effects };

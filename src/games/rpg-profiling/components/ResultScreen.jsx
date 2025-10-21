@@ -156,7 +156,8 @@ export default function ResultScreen({
             </div>
           </div>
 
-          {hero && (
+          {/* TEMPORAL: Simplify HUD */}
+          {/* {hero && (
             <div className="mt-6 rounded-xl border border-border bg-background/60 p-4">
               <p className="text-sm text-muted-foreground">Tu aventura</p>
               <div className="mt-3 flex items-center gap-3">
@@ -186,7 +187,7 @@ export default function ResultScreen({
                 </div>
               )}
             </div>
-          )}
+          )} */}
 
           <div className="mt-6 grid sm:grid-cols-1 gap-4">
             {/* <div className="rounded-xl border border-border bg-background/50 p-4">
@@ -208,7 +209,7 @@ export default function ResultScreen({
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 Premio basado en tus monedas:{" "}
-                {hero?.coins ?? Math.max(0, Math.round(score))}
+                {hero?.coins ?? Math.max(0, Math.round(score))} 🪙
               </p>
             </div>
           </div>
