@@ -1,6 +1,7 @@
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useThree } from '@react-three/fiber';
 import { OrthographicCamera } from '@react-three/drei';
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
+import * as THREE from 'three';
 
 const BLOCK_HEIGHT = 0.2;
 const BLOCK_COLORS = [
@@ -31,24 +32,36 @@ function CurrentBlock({ x, z, y, width, depth, colorIndex }) {
   );
 }
 
+function CameraRig({ stackTopY }) {
+  const { camera } = useThree();
+  useEffect(() => {
+    const target = new THREE.Vector3(0, stackTopY, 0);
+    const offset = new THREE.Vector3(6, 6, 6);
+    camera.position.copy(target).add(offset);
+    camera.lookAt(target);
+    camera.updateProjectionMatrix();
+  }, [camera, stackTopY]);
+  return null;
+}
+
 function Scene({ blocks, currentBlock }) {
   const blockCount = blocks.length;
 
-  // Camera follows the stack height
-  const cameraY = useMemo(() => {
-    const topY = blockCount * BLOCK_HEIGHT;
-    return Math.max(4, topY + 3);
-  }, [blockCount]);
+  const stackTopY = useMemo(() => {
+    const topBlock = blocks[blockCount - 1];
+    return topBlock ? topBlock.y + BLOCK_HEIGHT / 2 : 0;
+  }, [blocks, blockCount]);
 
   return (
     <>
       <OrthographicCamera
         makeDefault
-        position={[4, cameraY, 4]}
-        zoom={120}
+        position={[6, 6, 6]}
+        zoom={100}
         near={0.1}
-        far={100}
+        far={200}
       />
+      <CameraRig stackTopY={stackTopY} />
 
       <ambientLight intensity={0.6} />
       <directionalLight
