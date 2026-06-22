@@ -4,6 +4,7 @@ import App from "./App.jsx";
 
 const RPGProfiling = lazy(() => import("./games/rpg-profiling/index.jsx"));
 const TokenStack = lazy(() => import("./games/token-stack/index.jsx"));
+const TokenStackAdmin = lazy(() => import("./games/token-stack/admin.jsx"));
 
 function GameLoader() {
   return (
@@ -20,7 +21,7 @@ export function AppRoutes() {
         <Route path="/" element={<App />} />
         <Route path="/rpg-profiling" element={<RPGProfiling />} />
         <Route path="/token-stack" element={<TokenStack />} />
-        <Route path="/token-stack/admin" element={<TokenStack />} />
+        <Route path="/token-stack/admin" element={<TokenStackAdmin />} />
       </Routes>
     </Suspense>
   );

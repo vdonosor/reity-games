@@ -151,6 +151,7 @@ async function submitScore(lead, state) {
       },
       body: JSON.stringify({
         lead,
+        seed: state.seed,
         client_score: state.score,
         events: state.events,
         client_ts: Date.now(),
