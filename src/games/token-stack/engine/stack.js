@@ -20,7 +20,7 @@ function hashSeed(s) {
 }
 
 // Constants
-const BLOCK_HEIGHT = 0.2;
+const BLOCK_HEIGHT = 0.5;
 const BASE_SPEED = 0.012;
 const SPEED_INCREMENT = 0.0003;
 const MAX_SPEED = 0.025;
