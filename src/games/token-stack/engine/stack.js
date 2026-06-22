@@ -3,27 +3,46 @@ const BLOCK_HEIGHT = 0.85;
 const BLOCK_WIDTH = 1.0;
 const BLOCK_DEPTH = 0.85;
 
-const SWING_RANGE = 2.0;         // pendulum half-amplitude (~2 block widths from tower)
-const BASE_PHASE_SPEED = 0.020;  // radians per frame at 60fps
+export const ROPE_L = 3.5;          // rope length pivot→block center
+export const PIVOT_H = 5.0;         // crane pivot above top of last placed block
+const SWING_ANGLE_AMP = 0.58;       // pendulum amplitude (rad, ~33°)
+
+const BASE_PHASE_SPEED = 0.020;
 const SPEED_INCREMENT = 0.0003;
 const MAX_PHASE_SPEED = 0.048;
-const PERFECT_THRESHOLD = 0.92;  // overlap ratio >= this = perfect
+const PERFECT_THRESHOLD = 0.92;
 const PERFECT_SCORE_BONUS = 5;
 const NORMAL_SCORE = 1;
-const MISS_THRESHOLD = 0.50;     // overlap ratio < this = lose a life
+const MISS_THRESHOLD = 0.50;
 const MAX_LIVES = 3;
 
+// Pendulum position from top of last placed block and oscillation phase.
+// Pivot tracks topBlock.x so the crane follows the tower center.
+function pendulumPos(topBlock, phase) {
+  const theta = SWING_ANGLE_AMP * Math.sin(phase);
+  const pivotX = topBlock.x;
+  const pivotY = topBlock.y + BLOCK_HEIGHT + PIVOT_H;
+  return {
+    x: pivotX + ROPE_L * Math.sin(theta),
+    y: (pivotY - ROPE_L * Math.cos(theta)) - BLOCK_HEIGHT / 2,  // block bottom
+    theta,
+    pivotX,
+    pivotY,
+  };
+}
+
 export function createInitialState(seed) {
+  const baseBlock = { x: 0, z: 0, width: BLOCK_WIDTH, depth: BLOCK_DEPTH, y: 0 };
+  const pos = pendulumPos(baseBlock, Math.PI / 2);
   return {
     seed,
-    blocks: [{ x: 0, z: 0, width: BLOCK_WIDTH, depth: BLOCK_DEPTH, y: 0 }],
+    blocks: [baseBlock],
     currentBlock: {
-      x: SWING_RANGE,          // starts at right extreme
+      ...pos,
       z: 0,
       width: BLOCK_WIDTH,
       depth: BLOCK_DEPTH,
-      y: BLOCK_HEIGHT,
-      phase: Math.PI / 2,      // sin(π/2)=1 → right extreme
+      phase: Math.PI / 2,
       phaseSpeed: BASE_PHASE_SPEED,
     },
     score: 0,
@@ -49,15 +68,15 @@ function tick(state, dt) {
   const cb = state.currentBlock;
   const topBlock = state.blocks[state.blocks.length - 1];
   const newPhase = cb.phase + cb.phaseSpeed * dt * 60;
-  const newX = topBlock.x + SWING_RANGE * Math.sin(newPhase);
-  return { ...state, currentBlock: { ...cb, x: newX, phase: newPhase } };
+  const pos = pendulumPos(topBlock, newPhase);
+  return { ...state, currentBlock: { ...cb, ...pos, phase: newPhase } };
 }
 
 function placeBlock(state, ts) {
   const cb = state.currentBlock;
   const topBlock = state.blocks[state.blocks.length - 1];
 
-  // Overlap on X axis (single-axis pendulum)
+  // Overlap on X axis — cb.x is pendulum block center
   const overlapPx = Math.max(
     0,
     Math.min(cb.x + cb.width / 2, topBlock.x + topBlock.width / 2) -
@@ -68,7 +87,8 @@ function placeBlock(state, ts) {
   // Miss: more than 50% outside → lose a life
   if (overlapRatio < MISS_THRESHOLD) {
     const newLives = state.lives - 1;
-    const newImbalance = Math.min(3, state.imbalance + 1.5);
+    // Gradual imbalance: each miss adds 0.6 (max 5 total)
+    const newImbalance = Math.min(5, state.imbalance + 0.6);
 
     if (newLives <= 0) {
       return {
@@ -80,41 +100,45 @@ function placeBlock(state, ts) {
       };
     }
 
-    // Retry same floor level
-    const retryBlock = {
-      x: topBlock.x + SWING_RANGE,
-      z: 0,
-      width: cb.width,
-      depth: cb.depth,
-      y: cb.y,
-      phase: Math.PI / 2,
-      phaseSpeed: Math.min(BASE_PHASE_SPEED + state.score * SPEED_INCREMENT, MAX_PHASE_SPEED),
-    };
-
+    const retryPos = pendulumPos(topBlock, Math.PI / 2);
     return {
       ...state,
       lives: newLives,
       imbalance: newImbalance,
-      currentBlock: retryBlock,
+      currentBlock: {
+        ...retryPos,
+        z: 0,
+        width: cb.width,
+        depth: cb.depth,
+        phase: Math.PI / 2,
+        phaseSpeed: Math.min(BASE_PHASE_SPEED + state.score * SPEED_INCREMENT, MAX_PHASE_SPEED),
+      },
       events: [...state.events, { type: 'place_block', ts, result: 'miss', overlap: overlapRatio }],
     };
   }
 
-  // Valid placement — no trimming, block stays full size at current position
+  // Valid placement — block snaps to stack, no trimming
   const isPerfect = overlapRatio >= PERFECT_THRESHOLD;
   const newScore = state.score + (isPerfect ? PERFECT_SCORE_BONUS : NORMAL_SCORE);
+  // Gradual imbalance: near-miss adds at most 0.25 per block
   const newImbalance = isPerfect
-    ? Math.max(0, state.imbalance - 0.3)
-    : Math.min(3, state.imbalance + (1 - overlapRatio) * 0.6);
+    ? Math.max(0, state.imbalance - 0.5)
+    : Math.min(5, state.imbalance + (1 - overlapRatio) * 0.25);
 
-  const placedBlock = { x: cb.x, z: 0, width: cb.width, depth: cb.depth, y: cb.y };
-
-  const nextBlock = {
-    x: placedBlock.x + SWING_RANGE,
+  const placedBlock = {
+    x: cb.x,
     z: 0,
     width: cb.width,
     depth: cb.depth,
-    y: placedBlock.y + BLOCK_HEIGHT,
+    y: topBlock.y + BLOCK_HEIGHT,  // always stacks cleanly on top
+  };
+
+  const nextPos = pendulumPos(placedBlock, Math.PI / 2);
+  const nextBlock = {
+    ...nextPos,
+    z: 0,
+    width: cb.width,
+    depth: cb.depth,
     phase: Math.PI / 2,
     phaseSpeed: Math.min(BASE_PHASE_SPEED + newScore * SPEED_INCREMENT, MAX_PHASE_SPEED),
   };
