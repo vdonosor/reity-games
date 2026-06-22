@@ -74,13 +74,6 @@ describe('place_block — full overlap (perfect)', () => {
 
   it('width is restored on perfect placement', () => {
     const s = makeState();
-    // Simulate a state where currentBlock has been shrunk
-    const shrunk = {
-      ...s,
-      currentBlock: { ...s.currentBlock, width: 0.8 },
-    };
-    // But top block is 1.0 wide — overlap 0.8/1.0 = 80%, not perfect
-    // For perfect, let's keep width equal to top block
     const next = placeAt(s, 0);
     expect(next.blocks[next.blocks.length - 1].width).toBe(1.0);
   });

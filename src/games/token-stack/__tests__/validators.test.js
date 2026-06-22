@@ -3,16 +3,16 @@ import { validateChileanRUT, validateEmail } from '../engine/validators.js';
 
 describe('validateChileanRUT', () => {
   const valid = [
-    ['12345678-9', '12345678-9'],
-    ['12.345.678-9', '12345678-9'],
+    ['12345678-5', '12345678-5'],
+    ['12.345.678-5', '12345678-5'],
     ['11111111-1', '11111111-1'],
     ['76354771-K', '76354771-K'],
     ['76354771-k', '76354771-K'], // lowercase k accepted
     ['5126663-3', '5126663-3'],   // 7-digit RUT
-    ['9999999-9', '9999999-9'],
-    ['1-9', null],                // too short — invalid
+    ['9999999-3', '9999999-3'],
+    ['1-9', null],                // too short (< 7 digits) — invalid
     ['22222222-2', '22222222-2'],
-    ['17477863-4', '17477863-4'],
+    ['17477863-9', '17477863-9'],
   ];
 
   it.each(valid)('validates %s → %s', (input, expectedNorm) => {

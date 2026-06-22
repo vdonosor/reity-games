@@ -20,7 +20,7 @@ function getStoredLead() {
 }
 
 // Inner component that runs after lead is established
-function TokenStackGame({ lead, onClearLead }) {
+function TokenStackGame({ lead }) {
   const seedRef = useState(() => generateSeed())[0];
   const { state, placeBlock, restartGame } = useGameEngine(seedRef);
 
