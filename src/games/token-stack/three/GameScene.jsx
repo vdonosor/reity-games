@@ -259,30 +259,30 @@ function Building3D({ x, z, w, h, depth = 2.8, color, seed = 0 }) {
   );
 }
 
-// Far layer buildings (z≈-17): tall skyscrapers
+// Far layer buildings (z≈-17): tallest — end around score ~100
 const FAR_BLDGS = [
-  { x: -15, w: 5.5, h: 230, c: '#0c1422', s: 1 },
-  { x:  -8, w: 4.5, h: 260, c: '#091020', s: 2 },
-  { x:  -1, w: 7.0, h: 200, c: '#0d162e', s: 3 },
-  { x:   8, w: 5.0, h: 245, c: '#0a1220', s: 4 },
-  { x:  15, w: 4.5, h: 215, c: '#0e1828', s: 5 },
+  { x: -15, w: 5.5, h: 90, c: '#0c1422', s: 1 },
+  { x:  -8, w: 4.5, h: 78, c: '#091020', s: 2 },
+  { x:  -1, w: 7.0, h: 85, c: '#0d162e', s: 3 },
+  { x:   8, w: 5.0, h: 95, c: '#0a1220', s: 4 },
+  { x:  15, w: 4.5, h: 72, c: '#0e1828', s: 5 },
 ];
 
-// Mid layer (z≈-10): medium height buildings
+// Mid layer (z≈-10): medium — end around score ~55
 const MID_BLDGS = [
-  { x: -11, w: 4.0, h: 140, c: '#152030', s: 6  },
-  { x:  -5, w: 5.0, h: 120, c: '#122030', s: 7  },
-  { x:   2, w: 4.5, h: 160, c: '#182540', s: 8  },
-  { x:   9, w: 3.5, h: 105, c: '#102028', s: 9  },
-  { x:  14, w: 5.0, h: 145, c: '#14202e', s: 10 },
+  { x: -11, w: 4.0, h: 50, c: '#152030', s: 6  },
+  { x:  -5, w: 5.0, h: 45, c: '#122030', s: 7  },
+  { x:   2, w: 4.5, h: 55, c: '#182540', s: 8  },
+  { x:   9, w: 3.5, h: 40, c: '#102028', s: 9  },
+  { x:  14, w: 5.0, h: 48, c: '#14202e', s: 10 },
 ];
 
-// Near layer (z≈-5): closer shorter buildings
+// Near layer (z≈-5): shortest — end around score ~25
 const NEAR_BLDGS = [
-  { x: -9, w: 3.0, h: 50, c: '#202840', s: 11 },
-  { x: -4, w: 3.5, h: 65, c: '#1c2838', s: 12 },
-  { x:  4, w: 3.0, h: 40, c: '#182438', s: 13 },
-  { x:  9, w: 3.5, h: 58, c: '#162030', s: 14 },
+  { x: -9, w: 3.0, h: 18, c: '#202840', s: 11 },
+  { x: -4, w: 3.5, h: 22, c: '#1c2838', s: 12 },
+  { x:  4, w: 3.0, h: 16, c: '#182438', s: 13 },
+  { x:  9, w: 3.5, h: 20, c: '#162030', s: 14 },
 ];
 
 function Buildings() {
@@ -403,9 +403,15 @@ function CraneCable({ pivotX, pivotY, blockX, blockY }) {
   );
 }
 
-// Falling block animation when a block is placed
-function FallingBlockAnim({ x, z, width, depth, colorIndex, fromY, toY, startTime }) {
+const GRAVITY_VIS = 14;  // visual gravity (units/s²)
+
+// Falling block with ballistic arc matching pendulum release kinematics
+function FallingBlockAnim({ x0, y0, vx, vy, z, width, depth, colorIndex, toY }) {
   const meshRef = useRef();
+  const startRef = useRef(performance.now());
+  const startCY = y0 + BLOCK_HEIGHT / 2;
+  const targetCY = toY + BLOCK_HEIGHT / 2;
+
   const mats = useMemo(() => {
     const color = COLORS[colorIndex % COLORS.length];
     const sX = buildSideTex(color, depth, colorIndex);
@@ -423,17 +429,14 @@ function FallingBlockAnim({ x, z, width, depth, colorIndex, fromY, toY, startTim
 
   useFrame(() => {
     if (!meshRef.current) return;
-    const elapsed = (performance.now() - startTime) / 1000;
-    const duration = 0.30;
-    const t = Math.min(1, elapsed / duration);
-    // Ease-in (gravity feel): faster at end
-    const eased = t * t;
-    const cy = fromY + BLOCK_HEIGHT / 2 + (toY + BLOCK_HEIGHT / 2 - (fromY + BLOCK_HEIGHT / 2)) * eased;
-    meshRef.current.position.y = cy;
+    const t = (performance.now() - startRef.current) / 1000;
+    const cx = x0 + vx * t;
+    const cy = startCY + vy * t - 0.5 * GRAVITY_VIS * t * t;
+    meshRef.current.position.set(cx, Math.max(targetCY, cy), z);
   });
 
   return (
-    <mesh ref={meshRef} position={[x, fromY + BLOCK_HEIGHT / 2, z]}>
+    <mesh ref={meshRef} position={[x0, startCY, z]}>
       <boxGeometry args={[width, BLOCK_HEIGHT, depth]} />
       {mats.map((m, i) => <primitive key={i} object={m} attach={`material-${i}`} />)}
     </mesh>
@@ -444,12 +447,15 @@ function Crane({ currentBlock }) {
   const pivotX = currentBlock.pivotX ?? 0;
   const pivotY = currentBlock.pivotY ?? 10;
   const blockCenterY = currentBlock.y + BLOCK_HEIGHT / 2;
+  // Post spans only ABOVE the tower — from stack top to pivot
+  const towerTopY = pivotY - PIVOT_H;
+  const postH = PIVOT_H;
 
   return (
     <>
-      {/* Crane tower (vertical post) */}
-      <mesh position={[pivotX, pivotY / 2, -0.3]}>
-        <boxGeometry args={[0.18, pivotY, 0.18]} />
+      {/* Crane tower post — only above placed blocks, never through them */}
+      <mesh position={[pivotX, towerTopY + postH / 2, -0.3]}>
+        <boxGeometry args={[0.18, postH, 0.18]} />
         <meshLambertMaterial color="#e09820" />
       </mesh>
       {/* Crane arm (horizontal) */}
@@ -473,39 +479,35 @@ function Crane({ currentBlock }) {
   );
 }
 
-function Scene({ blocks, currentBlock, imbalance, gameOver }) {
+function Scene({ blocks, currentBlock, imbalance, gameOver, releaseInfo }) {
   const topBlock = blocks[blocks.length - 1];
   const stackTopY = topBlock ? topBlock.y + BLOCK_HEIGHT / 2 : 0;
   const topBlockX = topBlock ? topBlock.x : 0;
 
-  // Falling block animation state
+  // Falling block animation — driven by releaseInfo from parent
   const [falling, setFalling] = useState(null);
-  const prevLenRef = useRef(blocks.length);
 
   useEffect(() => {
-    if (blocks.length > prevLenRef.current) {
-      const newBlock = blocks[blocks.length - 1];
-      const prevTop = blocks[blocks.length - 2] || { y: -BLOCK_HEIGHT };
-      // Block was hanging at pendulum center height above prev stack
-      const pendulumCenterY = prevTop.y + BLOCK_HEIGHT + PIVOT_H - ROPE_L;
-      const fromY = pendulumCenterY - BLOCK_HEIGHT / 2;
-      setFalling({
-        x: newBlock.x, z: newBlock.z,
-        width: newBlock.width, depth: newBlock.depth,
-        colorIndex: blocks.length - 1,
-        fromY,
-        toY: newBlock.y,
-        startTime: performance.now(),
-        id: blocks.length,
-      });
-      prevLenRef.current = blocks.length;
-    }
-  }, [blocks]);
+    if (!releaseInfo) return;
+    const newBlock = blocks[blocks.length - 1];
+    if (!newBlock) return;
+    setFalling({
+      id: releaseInfo.id,
+      x0: releaseInfo.x,
+      y0: releaseInfo.y,
+      vx: releaseInfo.vx,
+      vy: releaseInfo.vy,
+      z: newBlock.z,
+      width: newBlock.width,
+      depth: newBlock.depth,
+      colorIndex: releaseInfo.colorIndex,
+      toY: newBlock.y,
+    });
+  }, [releaseInfo]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Clear falling anim after it completes
   useEffect(() => {
     if (!falling) return;
-    const t = setTimeout(() => setFalling(null), 350);
+    const t = setTimeout(() => setFalling(null), 600);
     return () => clearTimeout(t);
   }, [falling?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -542,7 +544,7 @@ function Scene({ blocks, currentBlock, imbalance, gameOver }) {
   );
 }
 
-export function GameScene({ blocks, currentBlock, imbalance = 0, gameOver = false }) {
+export function GameScene({ blocks, currentBlock, imbalance = 0, gameOver = false, releaseInfo = null }) {
   return (
     <Canvas
       data-testid="game-scene-ready"
@@ -551,7 +553,7 @@ export function GameScene({ blocks, currentBlock, imbalance = 0, gameOver = fals
       gl={{ antialias: true }}
       scene={{ background: new THREE.Color('#08101c') }}
     >
-      <Scene blocks={blocks} currentBlock={currentBlock} imbalance={imbalance} gameOver={gameOver} />
+      <Scene blocks={blocks} currentBlock={currentBlock} imbalance={imbalance} gameOver={gameOver} releaseInfo={releaseInfo} />
     </Canvas>
   );
 }

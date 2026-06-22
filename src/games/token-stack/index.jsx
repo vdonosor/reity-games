@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { CaptureForm } from './components/CaptureForm.jsx';
 import { GameOver } from './components/GameOver.jsx';
 import { GameScene } from './three/GameScene.jsx';
@@ -26,11 +26,28 @@ function TokenStackGame({ lead }) {
 
   const [gameOverData, setGameOverData] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [releaseInfo, setReleaseInfo] = useState(null);
+  const tapIdRef = useRef(0);
 
   const handleTap = useCallback(() => {
     if (state.gameOver) return;
+    // Capture pendulum kinematics at release for falling animation
+    const cb = state.currentBlock;
+    const SWING_AMP = 0.58;
+    const ROPE = 3.5;
+    const angVel = SWING_AMP * (cb.phaseSpeed || 0.02) * 60 * Math.cos(cb.phase || 0);
+    const theta = cb.theta || 0;
+    tapIdRef.current += 1;
+    setReleaseInfo({
+      id: tapIdRef.current,
+      x: cb.x,
+      y: cb.y,
+      vx: ROPE * Math.cos(theta) * angVel * 0.18,   // damped horizontal arc
+      vy: ROPE * Math.sin(theta) * angVel * 1.6,    // amplified for visible arc
+      colorIndex: state.blocks.length,
+    });
     placeBlock();
-  }, [state.gameOver, placeBlock]);
+  }, [state.gameOver, state.currentBlock, state.blocks.length, placeBlock]);
 
   // Detect game over and submit score
   useEffect(() => {
@@ -90,6 +107,7 @@ function TokenStackGame({ lead }) {
           currentBlock={state.currentBlock}
           imbalance={state.imbalance}
           gameOver={state.gameOver}
+          releaseInfo={releaseInfo}
         />
       </div>
 
