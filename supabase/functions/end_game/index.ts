@@ -9,15 +9,29 @@ const CORS = {
 }
 
 // Replica del motor del cliente para anti-cheat básico.
-// Reconsidera: solo cuenta place_block events; perfectos valen 5, normales 1.
+// Con el sistema de 3 vidas: los miss no terminan el juego hasta el 3er fallo.
 function recalculateScore(events: Array<{ type: string; result?: string }>): number {
   let score = 0
+  let lives = 3
   for (const e of events) {
     if (e.type !== 'place_block') continue
-    if (e.result === 'miss') break
+    if (e.result === 'miss') {
+      lives--
+      if (lives <= 0) break  // 3er miss = game over
+      continue
+    }
     score += e.result === 'perfect' ? 5 : 1
   }
   return score
+}
+
+// RUT sintético derivado del email (determinista, evita colisiones con RUTs reales)
+function syntheticRut(email: string): string {
+  let h = 0x811c9dc5
+  for (let i = 0; i < email.length; i++) {
+    h = Math.imul(h ^ email.charCodeAt(i), 0x01000193) >>> 0
+  }
+  return `em_${h.toString(16)}`
 }
 
 Deno.serve(async (req: Request) => {
@@ -38,7 +52,7 @@ Deno.serve(async (req: Request) => {
 
   const { lead, client_score, events = [], seed, client_ts } = body
 
-  if (!lead?.rut || !lead?.nombre || !lead?.email) {
+  if (!lead?.nombre || !lead?.email) {
     return json({ error: 'Missing lead data' }, 400)
   }
 
@@ -47,11 +61,14 @@ Deno.serve(async (req: Request) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
 
-  // 1. Upsert lead — si el RUT ya existe, actualiza nombre/email pero no duplica.
+  // Si no viene RUT (form simplificado), generamos uno sintético del email.
+  const rut = lead.rut || syntheticRut(lead.email)
+
+  // 1. Upsert lead — evita duplicados por RUT.
   const { data: leadRow, error: leadErr } = await supabase
     .from('leads')
     .upsert(
-      { rut: lead.rut, nombre: lead.nombre, email: lead.email, consent: true },
+      { rut, nombre: lead.nombre, email: lead.email, consent: true },
       { onConflict: 'rut' }
     )
     .select('id')

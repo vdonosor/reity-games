@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { validateChileanRUT, validateEmail } from '../engine/validators.js';
+import { validateEmail } from '../engine/validators.js';
 
 export function CaptureForm({ onSubmit, loading }) {
-  const [form, setForm] = useState({ nombre: '', email: '', rut: '', consent: false });
+  const [form, setForm] = useState({ nombre: '', email: '', consent: false });
   const [errors, setErrors] = useState({});
 
   function handleChange(e) {
@@ -16,17 +16,15 @@ export function CaptureForm({ onSubmit, loading }) {
     if (!form.nombre.trim()) errs.nombre = 'Nombre requerido';
     const emailResult = validateEmail(form.email);
     if (!emailResult.valid) errs.email = 'Email inválido';
-    const rutResult = validateChileanRUT(form.rut);
-    if (!rutResult.valid) errs.rut = 'RUT inválido (ej: 12345678-9)';
     if (!form.consent) errs.consent = 'Debes aceptar para continuar';
-    return { errs, emailNorm: emailResult.normalized, rutNorm: rutResult.normalized };
+    return { errs, emailNorm: emailResult.normalized };
   }
 
   function handleSubmit(e) {
     e.preventDefault();
-    const { errs, emailNorm, rutNorm } = validate();
+    const { errs, emailNorm } = validate();
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
-    onSubmit({ nombre: form.nombre.trim(), email: emailNorm, rut: rutNorm, consent: true });
+    onSubmit({ nombre: form.nombre.trim(), email: emailNorm, consent: true });
   }
 
   return (
@@ -59,18 +57,6 @@ export function CaptureForm({ onSubmit, loading }) {
             placeholder="tu@email.com"
             autoComplete="email"
           />
-          <Field
-            label="RUT"
-            name="rut"
-            type="text"
-            value={form.rut}
-            onChange={handleChange}
-            error={errors.rut}
-            placeholder="12345678-9"
-            autoComplete="off"
-            inputMode="text"
-          />
-
           <div>
             <label className="flex items-start gap-3 cursor-pointer">
               <input

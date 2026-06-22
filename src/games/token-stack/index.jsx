@@ -73,9 +73,24 @@ function TokenStackGame({ lead }) {
         </div>
       )}
 
+      {/* Lives HUD */}
+      <div className="absolute top-4 left-4 z-10 pointer-events-none flex gap-1.5">
+        {[1, 2, 3].map(i => (
+          <div
+            key={i}
+            className={`w-3 h-3 rounded-full transition-colors ${i <= state.lives ? 'bg-red-500' : 'bg-gray-700'}`}
+          />
+        ))}
+      </div>
+
       {/* 3D scene */}
       <div className="absolute inset-0">
-        <GameScene blocks={state.blocks} currentBlock={state.currentBlock} />
+        <GameScene
+          blocks={state.blocks}
+          currentBlock={state.currentBlock}
+          imbalance={state.imbalance}
+          gameOver={state.gameOver}
+        />
       </div>
 
       {/* Game Over overlay */}
