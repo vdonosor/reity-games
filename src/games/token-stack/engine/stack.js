@@ -1,12 +1,12 @@
 // Constants
-const BLOCK_HEIGHT = 0.5;
+const BLOCK_HEIGHT = 0.85;
 const BLOCK_WIDTH = 1.0;
-const BLOCK_DEPTH = 0.75;
+const BLOCK_DEPTH = 0.85;
 
-const SWING_RANGE = 1.5;         // pendulum half-amplitude (units)
-const BASE_PHASE_SPEED = 0.025;  // radians per frame at 60fps
+const SWING_RANGE = 2.0;         // pendulum half-amplitude (~2 block widths from tower)
+const BASE_PHASE_SPEED = 0.020;  // radians per frame at 60fps
 const SPEED_INCREMENT = 0.0003;
-const MAX_PHASE_SPEED = 0.058;
+const MAX_PHASE_SPEED = 0.048;
 const PERFECT_THRESHOLD = 0.92;  // overlap ratio >= this = perfect
 const PERFECT_SCORE_BONUS = 5;
 const NORMAL_SCORE = 1;

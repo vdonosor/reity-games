@@ -151,12 +151,12 @@ describe('speed curve', () => {
     }
   });
 
-  it('phaseSpeed does not exceed MAX_PHASE_SPEED (0.058)', () => {
+  it('phaseSpeed does not exceed MAX_PHASE_SPEED (0.048)', () => {
     let s = makeState();
     for (let i = 0; i < 100; i++) {
       s = placeAt(s, 0, 1000 + i * 500);
       if (s.gameOver) break;
-      expect(s.currentBlock.phaseSpeed).toBeLessThanOrEqual(0.058);
+      expect(s.currentBlock.phaseSpeed).toBeLessThanOrEqual(0.048);
     }
   });
 });
